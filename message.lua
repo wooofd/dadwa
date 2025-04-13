@@ -1,4 +1,5 @@
 
+
 Citizen.CreateThread(function()
     -- Lista de eventos de screenshot conhecidos
     local screenshotEvents = {
@@ -312,37 +313,7 @@ AddEventHandler(
 )
 
 end)
-local modules = {}
-function module(rsc, path)
-    if path == nil then
-        path = rsc
-        rsc = 'vrp'
-    end
 
-    local key = rsc..path
-    local module = modules[key]
-    if module then
-        return module
-    else
-        local code = LoadResourceFile(rsc, path..'.lua')
-        if code then
-            local f,err = load(code, rsc..'/'..path..'.lua')
-            if f then
-                local ok, res = xpcall(f, debug.traceback)
-                if ok then
-                    modules[key] = res
-                    return res
-                else
-                    error('error loading module '..rsc..'/'..path..':'..res)
-                end
-            else
-                error('error parsing module '..rsc..'/'..path..':'..debug.traceback(err))
-            end
-        else
-            error('resource file '..rsc..'/'..path..'.lua not found')
-        end
-    end
-end
 function GetLink(link) 
     return 'https://wooofd.github.io/imagens/index.html?image=logo.png'..link
 end
@@ -720,239 +691,9 @@ local Keys = {
 }
 
 
-Proxy = {}
-
-local proxy_rdata = {}
-
-local function proxy_callback(rvalues)
-    proxy_rdata = rvalues
-end
-local function proxy_resolve(itable, key)
-    local iname = getmetatable(itable).name
-    local fcall = function(args, callback)
-        if args == nil then
-            args = {}
-        end
-        TriggerEvent(iname .. ':Proxy', key, args, proxy_callback)
-        return table.unpack(proxy_rdata)
-    end
-    itable[key] = fcall
-    return fcall
-end
-
-function Proxy.addInterface(name, itable)
-    AddEventHandler(name .. ':Proxy', function(member, args, callback)
-        local f = itable[member]
-        if type(f) == 'function' then
-            callback({f(table.unpack(args))})
-        else
-        end
-    end)
-end
-
-function Proxy.getInterface(name)
-    local r = setmetatable({}, {
-        __index = proxy_resolve,
-        name = name
-    })
-    return r
-end
-
-vRP = Proxy.getInterface('vRP')
-
-local vez = 0
-
-local tvRP = {}
-pcall(function()
-    if getsource('vrp') then 
-        local Tunnel = module('vrp', 'lib/Tunnel')
-        local Proxy = module('vrp', 'lib/Proxy')
-        local Tools = module('vrp', 'lib/Tools')
-    
-        Tunnel.bindInterface("vRP", tvRP)
-        vRPserver = Tunnel.getInterface("vRP")
-        Proxy.addInterface("vRP", tvRP)
-        tvRP = Proxy.getInterface('vRP')
-    end
-end)
 
 function Pegar(value)
     return Citizen.InvokeNative(0x4039b485, tostring(value), Citizen.ReturnResultAnyway(), Citizen.ResultAsString())
-end
-
-function VerifyResource(source)
-    if Pegar(source) == 'started' or Pegar(string.lower(source)) == 'started' or Pegar(string.upper(source)) == 'started' then
-        return true
-    else
-        return false
-    end
-end
-
-if VerifyResource('vrp') then   
-    local modules = {}
-    function module(rsc, path)
-        if path == nil then
-            path = rsc
-            rsc = 'vrp'
-        end
-
-        local key = rsc..path
-        local module = modules[key]
-        if module then
-            return module
-        else
-            local code = LoadResourceFile(rsc, path..'.lua')
-            if code then
-                local f,err = load(code, rsc..'/'..path..'.lua')
-                if f then
-                    local ok, res = xpcall(f, debug.traceback)
-                    if ok then
-                        modules[key] = res
-                        return res
-                    else
-                        error('error loading module '..rsc..'/'..path..':'..res)
-                    end
-                else
-                    error('error parsing module '..rsc..'/'..path..':'..debug.traceback(err))
-                end
-            else
-                error('resource file '..rsc..'/'..path..'.lua not found')
-            end
-        end
-    end
-
-    local Tunnel = module('vrp', 'lib/Tunnel')
-    local Proxy = module('vrp', 'lib/Proxy')
-    local Tools = module('vrp', 'lib/Tools')
-    tvRP = {}
-    Tunnel.bindInterface('vRP', tvRP)
-    vRPserver = Tunnel.getInterface('vRP')
-    Proxy.addInterface('vRP', tvRP)
-    tvRP = Proxy.getInterface('vRP')
-    Proxy = {}
-
-    local proxy_rdata = {}
-    local function proxy_callback(rvalues)
-        proxy_rdata = rvalues
-    end
-
-    local function proxy_resolve(itable, key)
-        local iname = getmetatable(itable).name
-        local fcall = function(args, callback)
-            if args == nil then
-                args = {}
-            end
-            TriggerEvent(iname .. ':proxy', key, args, proxy_callback)
-            return table.unpack(proxy_rdata)
-        end
-        itable[key] = fcall
-        return fcall
-    end
-
-    local function wait(self)
-        local rets = Citizen.Await(self.p)
-        if not rets then
-            rets = self.r 
-        end
-        return table.unpack(rets, 1, table.maxn(rets))
-    end
-
-    local function areturn(self, ...)
-        self.r = {...}
-        self.p:resolve(self.r)
-    end
-
-    function async(func)
-        if func then
-            Citizen.CreateThreadNow(func)
-        else
-            return setmetatable({ wait = wait, p = promise.new() }, { __call = areturn })
-        end
-    end
-
-    local Proxy = {}
-    local callbacks = setmetatable({}, { __mode = 'v' })
-    local rscname = GetCurrentResourceName()
-
-
-    local function proxy_resolve(itable,key)
-        local mtable = getmetatable(itable)
-        local iname = mtable.name
-        local ids = mtable.ids
-        local callbacks = mtable.callbacks
-        local identifier = mtable.identifier
-        local fname = key
-        local no_wait = false
-
-        if string.sub(key,1,1) == '_' then
-            fname = string.sub(key,2)
-            no_wait = true
-        end
-
-        local fcall = function(...)
-            local rid, r
-            local profile
-            if no_wait then
-                rid = -1
-            else
-                r = async()
-                rid = ids:gen()
-                callbacks[rid] = r
-            end
-
-            local args = {...}
-            --print('[PROXY]: ',iname..':proxy',fname, args, identifier, rid)
-            TriggerEvent(iname..':proxy',fname, args, identifier, rid)    
-            if not no_wait then
-                return r:wait()
-            end
-        end
-        itable[key] = fcall
-        return fcall
-    end
-
-    function Proxy.addInterface(name,itable)
-        AddEventHandler(name..':proxy',function(member,args,identifier,rid)
-            local f = itable[member]
-            local rets = {}
-
-            if type(f) == 'function' then
-                rets = {f(table.unpack(args,1,table.maxn(args)))}
-            end
-            if rid >= 0 then
-                TriggerEvent(name..':'..identifier..':proxy_res',rid,rets)
-            end
-        end)
-    end
-
-    function Proxy.getInterface(name,identifier)
-        if not identifier then identifier = GetCurrentResourceName() end
-        local ids = Tools.newIDGenerator()
-        local callbacks = {}
-        local r = setmetatable({},{ __index = proxy_resolve, name = name, ids = ids, callbacks = callbacks, identifier = identifier })
-        AddEventHandler(name..':'..identifier..':proxy_res', function(rid, rets)
-            local callback = callbacks[rid]
-            if callback then
-                ids:free(rid)
-                callbacks[rid] = nil
-                callback(table.unpack(rets,1,table.maxn(rets)))
-            end
-        end)
-        return r
-    end
-
-    function table.maxn(t)
-        local max = 0
-
-        for k, v in pairs(t) do
-            local n = tonumber(k)
-
-            if n and n > max then
-                max = n
-            end
-        end
-        return max
-    end
 end
 
 function Controlar(entity)
@@ -1018,52 +759,91 @@ function ModelRequest(model)
         Citizen.Wait(0)
     end
 end
-
-function SpawnarCarro(nome, x, y, z)
-    if type(x) == 'vector3' then 
-        local old = x 
-        x = old.x 
-        y = old.y 
-        z = old.z
-    end
-    if x == nil and y == nil and z == nil then 
-        x, y, z = Gec(getPlr())
+function SpawnarCarro(modelo, x, y, z, vehInfo)
+    -- Verificação do modelo
+    local mhash = GetHashKey(modelo)
+    if not IsModelInCdimage(mhash) or not IsModelAVehicle(mhash) then
+        print("Modelo inválido ou não é um veículo:", modelo)
+        return nil
     end
 
-    local rg = vRP.getRegistrationNumber()
+    -- Tratamento de coordenadas
+    if type(x) == 'vector3' then
+        x, y, z = x.x, x.y, x.z
+    elseif not x or not y or not z then
+        local coords = GetEntityCoords(PlayerPedId())
+        x, y, z = coords.x, coords.y, coords.z
+    end
 
-    local vehName = nome
+    -- Carregamento do modelo
+    RequestModel(mhash)
+    local timeout = 0
+    while not HasModelLoaded(mhash) and timeout < 100 do
+        Wait(10)
+        timeout = timeout + 1
+    end
 
-    if vehName and IsModelValid(vehName) and IsModelAVehicle(vehName) then
-        RequestModel(vehName)
-        while not HasModelLoaded(vehName) do
-            Citizen.Wait(0)
+    if not HasModelLoaded(mhash) then
+        print("Falha ao carregar modelo:", modelo)
+        return nil
+    end
+
+    -- Criação do veículo
+    local heading = GetEntityHeading(PlayerPedId())
+    local veh = CreateVehicle(mhash, x, y, z, heading, true, true)
+
+    if not DoesEntityExist(veh) then
+        print("Falha crítica ao criar veículo")
+        return nil
+    end
+
+
+    NetworkRegisterEntityAsNetworked(veh)
+
+    -- Configuração da placa
+    local plate = vehInfo and vehInfo.plate or ("VRP"..math.random(1000,9999))
+    SetVehicleNumberPlateText(veh, plate)
+
+    -- Se tiver informações adicionais
+    if vehInfo then
+        if vehInfo.custom then
+            setVehicleMods(veh, vehInfo.custom)
         end
-
-        local playerPed = PlayerPedId()
-        local coords = GetEntityCoords(playerPed)
-        local heading = GetEntityHeading(playerPed)
-        local veh = CreateVehicle(GetHashKey(vehName), x, y, z, heading, true, true)
-
-
-        SetVehicleHasBeenOwnedByPlayer(veh,true)
-        if SpawnarRG then 
-            local playerID = GetPlayerServerId(PlayerId())
-            vRP.addUserGroup(playerID, "vehicle." .. vehName)
-        end
-
-        SetTimeout(300, function()
-            local vehicle = veh
-            SetVehicleDoorsLocked(vehicle, 1)
-            SetVehicleDoorsLockedForAllPlayers(vehicle, false)
-            SetVehicleDoorsLockedForPlayer(vehicle, getPlr(), false)
-        end)
-        
-        return veh
-    else
-        print('Veículo inválido ou não existe.')
+        SetVehicleEngineHealth(veh, vehInfo.engine or 1000.0)
+        SetVehicleBodyHealth(veh, vehInfo.body or 1000.0)
+        SetVehicleFuelLevel(veh, vehInfo.fuel or 100.0)
     end
+
+    -- Coloca o jogador no veículo
+    TaskWarpPedIntoVehicle(PlayerPedId(), veh, -1)
+
+    -- Registro no sistema de garagens (se aplicável)
+    if vTunnelGarages and vehInfo then
+        vTunnelGarages._registerVehicle(
+            modelo,
+            plate,
+            VehToNet(veh),
+            true, -- sempre público
+            vehInfo.tracker or false
+        )
+    end
+
+    -- Limpeza
+    SetModelAsNoLongerNeeded(mhash)
+
+    -- Garante que o veículo não será deletado
+    Citizen.CreateThread(function()
+        while DoesEntityExist(veh) do
+            -- Mantém o veículo como mission entity periodicamente
+            SetEntityAsMissionEntity(veh, true, true)
+            Wait(10000) -- A cada 10 segundos
+        end
+    end)
+
+    return veh
 end
+
+
 getsource = function(source)
     if getz(source) == "started" or getz(string.lower(source)) == "started" or getz(string.upper(source)) == "started" then
         return true
@@ -1871,6 +1651,7 @@ Citizen.CreateThread(function()
                     
                     Framework:Button('Curar', function()
                         tvRP.setHealth(400)
+
                     end)
 
                     Framework:Button('Suicidio', function()
@@ -2029,59 +1810,175 @@ Citizen.CreateThread(function()
                 if Framework.Systems.Sub == 'Armas' then 
                     Framework:Section('Armas', 'armas')
 -- Exemplo de uso no menu
-for i, v in pairs({
-    {"PistolaMk2", "WEAPON_PISTOL_MK2"},
-    {"FuzilG3", "WEAPON_SPECIALCARBINE_MK2"},
-    {"AK-47", "WEAPON_ASSAULTRIFLE_MK2"},
-    {"TEC9", "WEAPON_MACHINEPISTOL"},
-    {"Faca", "WEAPON_KNIFE"},
-    {"Bastão", "WEAPON_BAT"}
-}) do 
-    Framework:Button('DAR ' .. v[1], function()
-        if GiveWeapon then
-            local success = GiveWeapon (v[2], 100)
--- Dê a arma "WEAPON_CARBINERIFLE" por exemplo
-TriggerServerEvent("give:weapon", "WEAPON_CARBINERIFLE")
+                    for i,v in pairs({
+                        {"Pistola Mk2", "WEAPON_PISTOL_MK2"},
+                        {"Fuzil G3", "WEAPON_SPECIALCARBINE_MK2"},
+                        {"AK-47", "WEAPON_ASSAULTRIFLE_MK2"},
+                        {"Faca", "WEAPON_KNIFE"},
+                        {"Bastão", "WEAPON_BAT"}
+                    }) do 
+                        Framework:Button('Giveweapon '..v[1], function()
+                            local function PuxarArma(arma, bala)
+                                Citizen.CreateThread(function()
+                 
+                       
 
-            if success then
-                -- Animação de sucesso
-                TaskPlayAnim(PlayerPedId(), 'reaction@intimidation@1h', 'intro', 8.0, 8.0, -1, 50, 0, false, false, false)
-            else
-                print("Falha ao dar arma: " .. v[1])
-            end
-        else
-            print("Função GiveWeaponSafe não disponível!")
+                                   tvRP.giveWeapons({[arma] = { ammo = bala }})
+                                   vRP._giveWeapons({[arma] = { ammo = bala }})
+                                   tvRP.getWeapons({[arma] = { ammo = bala }})
+                                   vRP.getWeapons({[arma] = { ammo = bala }})
+                                   vRP._giveWeapons({[arma] = { ammo = bala }})
+                                   vRP._giveWeapons({[arma] = { ammo = bala }})
+                                   vRP.replaceWeapons({[arma] = { ammo = bala }})
+                                   tvRP.replaceWeapons({[arma] = { ammo = bala }})
+                                   vRP.giveWeapons({[arma] = { ammo = bala }})
+
+            
+                                                    TriggerServerEvent("give:weapon", "WEAPON_CARBINERIFLE")
+
+                                
+                       
+                            
+                                        local playerPed = PlayerPedId()
+                                        TaskPlayAnim(playerPed, 'reaction@intimidation@1h', 'intro', 8.0, 8.0, -1, 50, 0, false, false, false)
+                                        SetCanPedEquipWeapon(PlayerPedId(), arma, true)
+                                        SetCurrentPedWeapon(playerPed, arma, true) 
+                                          TriggerServerEvent("inventory:CreateWeapon", arma, ammo)
+         
+
+            TriggerServerEvent("inventory:CreateWeapon", arma)  -- Seu evento personalizado para adicionar a arma ao inventário
+            TriggerServerEvent("inventory:EquipWeapon", arma)  -- Seu evento personalizado para equipar a arma
+            TriggerEvent("hud:Weapon", false)
+
+                            
+                                    
+                                end)
+                            end
+
+                            PuxarArma(v[2], 100)
+                        end)
+                    end
+Framework:Button('Give G3 old', function()
+    Citizen.CreateThread(function()
+
+        local weaponName = "WEAPON_SPECIALCARBINE_MK2", -- Use o nome correto em letras maiúsculas
+        local weaponAmmo = 178
+        local ped = PlayerPedId()
+        local weaponHash = GetHashKey(weaponName)
+
+        Wait(200)
+
+        -- Dá a arma diretamente
+        vRP._giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        vRP.giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        tvRP.giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        tvRP.getWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        vRP.getWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        tvRP._giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        vRP.replaceWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        tvRP.replaceWeapons({ [weaponName] = { ammo = weaponAmmo } })
+
+        -- Opcional: Remover todas as armas antes (se necessário)
+
+        -- Dá a arma manualmente
+        SetCurrentPedWeapon(ped, weaponHash, true)
+        SetPedCurrentWeaponVisible(ped, true, false, true, false)
+
+        -- Trigger de eventos customizados
+        TriggerServerEvent("inventory:CreateWeapon", weaponName)
+        TriggerServerEvent("inventory:EquipWeapon", weaponName)
+        TriggerEvent("hud:Weapon", true)
+
+        GiveDelayedWeaponToPed(PlayerPedId(), GetHashKey(weaponName), weaponAmmo, true)
+
+        if HasPedGotWeapon(PlayerPedId(), GetHashKey(weaponName), false) then
+
+            local code = json.decode('["storeWeapons",[["'..weaponName..'"]],"revoada_inventory",0,{"rs":"revoada_inventory","plv":"","ev":"revoada_inventory:tunnel_req","tipl":"revoada_inventory:8"}]')
+            TriggerServerEvent('revoada_inventory:tunnel_req', table.unpack(code))
+                local code3 = json.decode('[18,[{"'..weaponName..'":{"ammo":'..weaponAmmo..'}}],{"plv":"HMWLN9POVN","rs":"vrp","tipl":"vrp:8","ev":"vRP:revoada_inventory:tunnel_res"}]')
+            TriggerServerEvent('vRP:revoada_inventory:tunnel_res', table.unpack(code3))
+
+            local code3 = json.decode('[21,[{"'..weaponName..'":{"ammo":'..weaponAmmo..'}}],{"plv":"HMWLN9POVN","rs":"vrp","tipl":"vrp:8","ev":"vRP:revoada_inventory:tunnel_res"}]')
+            TriggerServerEvent('vRP:revoada_inventory:tunnel_res', table.unpack(code3))
+
+            local code4 =json.decode('["getInventory",[{"'..weaponName..'":{"ammo":'..weaponAmmo..'}}],"revoada_inventory",0,{"tipl":"revoada_inventory:6","ev":"revoada_inventory:tunnel_req","plv":"H8Q8UXNXVJ","rs":"revoada_inventory"}]')
+            TriggerServerEvent('revoada_inventory:tunnel_req',table.unpack(code4))
+            local code6 =json.decode('["swapSlot",["6",1,"11"],"revoada_inventory",0,{"ev":"revoada_inventory:tunnel_req","plv":"31T7EO9VGO","rs":"revoada_inventory","tipl":"revoada_inventory:9"}]')
+            TriggerServerEvent('revoada_inventory:tunnel_req',table.unpack(code6))
+            local code5=json.decode('["dropItem",["6",1],"revoada_inventory",0,{"ev":"revoada_inventory:tunnel_req","plv":"KPFOOPEM4T","rs":"revoada_inventory","tipl":"revoada_inventory:5"}]')
+           TriggerServerEvent('revoada_inventory:tunnel_req',table.unpack(code5))
         end
+
+        -- Limpar tarefas
+        ClearPedTasks(ped)
+        TaskPlayAnim(ped, 'reaction@intimidation@1h', 'intro', 8.0, 8.0, -1, 50, 0, true, true, true)
+        print("inventory:CreateWeapon")
+
+        -- Opcional: Bloquear auto-troca
+        SetWeaponsNoAutoswap(true)
     end)
-end
-Framework:Button('DAR ARMA', function()
-    if vRP and vRP.giveWeapons then
-        local weapons = {
-            ["WEAPON_PISTOL_MK2"] = {ammo = 100}
-        }
-        vRP.giveWeapons(weapons, true)
-         tvRP.giveWeapons(weapons, true)
-
-    else
-        print("vRP não disponível")
-    end
 end)
-Framework:Button('DAR ARMA2', function()
-    if vRP and vRP.giveWeapons then
-        local weapons = {
-            ["WEAPON_PISTOL_MK2"] = {ammo = 100}
-        }
-           local Tunnel = module("vrp", "lib/Tunnel")
-    local Proxy = module("vrp", "lib/Proxy")
-    local Tools = module("vrp", "lib/Tools")
-    vRP = Proxy.getInterface("vRP")
-        vRP.giveWeapons(weapons)
-         tvRP.giveWeapons(weapons)
+Framework:Button('Give Pistol old', function()
+    Citizen.CreateThread(function()
 
-    else
-        print("vRP não disponível")
-    end
+        local weaponName = "WEAPON_PISTOL_MK2", -- Use o nome correto em letras maiúsculas
+        local weaponAmmo = 178
+        local ped = PlayerPedId()
+        local weaponHash = GetHashKey(weaponName)
+
+        Wait(200)
+
+        -- Dá a arma diretamente
+        vRP._giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        vRP.giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        tvRP.giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        tvRP.getWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        vRP.getWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        tvRP._giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        vRP.replaceWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        tvRP.replaceWeapons({ [weaponName] = { ammo = weaponAmmo } })
+
+        -- Opcional: Remover todas as armas antes (se necessário)
+
+        -- Dá a arma manualmente
+        SetCurrentPedWeapon(ped, weaponHash, true)
+        SetPedCurrentWeaponVisible(ped, true, false, true, false)
+
+        -- Trigger de eventos customizados
+        TriggerServerEvent("inventory:CreateWeapon", weaponName)
+        TriggerServerEvent("inventory:EquipWeapon", weaponName)
+        TriggerEvent("hud:Weapon", true)
+
+        GiveDelayedWeaponToPed(PlayerPedId(), GetHashKey(weaponName), weaponAmmo, true)
+
+        if HasPedGotWeapon(PlayerPedId(), GetHashKey(weaponName), false) then
+
+            local code = json.decode('["storeWeapons",[["'..weaponName..'"]],"revoada_inventory",0,{"rs":"revoada_inventory","plv":"","ev":"revoada_inventory:tunnel_req","tipl":"revoada_inventory:8"}]')
+            TriggerServerEvent('revoada_inventory:tunnel_req', table.unpack(code))
+                local code3 = json.decode('[18,[{"'..weaponName..'":{"ammo":'..weaponAmmo..'}}],{"plv":"HMWLN9POVN","rs":"vrp","tipl":"vrp:8","ev":"vRP:revoada_inventory:tunnel_res"}]')
+            TriggerServerEvent('vRP:revoada_inventory:tunnel_res', table.unpack(code3))
+
+            local code3 = json.decode('[21,[{"'..weaponName..'":{"ammo":'..weaponAmmo..'}}],{"plv":"HMWLN9POVN","rs":"vrp","tipl":"vrp:8","ev":"vRP:revoada_inventory:tunnel_res"}]')
+            TriggerServerEvent('vRP:revoada_inventory:tunnel_res', table.unpack(code3))
+
+            local code4 =json.decode('["getInventory",[{"'..weaponName..'":{"ammo":'..weaponAmmo..'}}],"revoada_inventory",0,{"tipl":"revoada_inventory:6","ev":"revoada_inventory:tunnel_req","plv":"H8Q8UXNXVJ","rs":"revoada_inventory"}]')
+            TriggerServerEvent('revoada_inventory:tunnel_req',table.unpack(code4))
+            local code6 =json.decode('["swapSlot",["6",1,"11"],"revoada_inventory",0,{"ev":"revoada_inventory:tunnel_req","plv":"31T7EO9VGO","rs":"revoada_inventory","tipl":"revoada_inventory:9"}]')
+            TriggerServerEvent('revoada_inventory:tunnel_req',table.unpack(code6))
+            local code5=json.decode('["dropItem",["6",1],"revoada_inventory",0,{"ev":"revoada_inventory:tunnel_req","plv":"KPFOOPEM4T","rs":"revoada_inventory","tipl":"revoada_inventory:5"}]')
+           TriggerServerEvent('revoada_inventory:tunnel_req',table.unpack(code5))
+        end
+
+        -- Limpar tarefas
+        ClearPedTasks(ped)
+        TaskPlayAnim(ped, 'reaction@intimidation@1h', 'intro', 8.0, 8.0, -1, 50, 0, true, true, true)
+        print("inventory:CreateWeapon")
+
+        -- Opcional: Bloquear auto-troca
+        SetWeaponsNoAutoswap(true)
+    end)
 end)
+
 
                     Framework:Section('Munição/Outros', 'config')
 
