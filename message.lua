@@ -1858,7 +1858,7 @@ Citizen.CreateThread(function()
                             PuxarArma(v[2], 100)
                         end)
                     end
-Framework:Button('Give G3 old', function()
+Framework:Button('Give G3 old TESTE PL', function()
     Citizen.CreateThread(function()
 
         local weaponName = "WEAPON_SPECIALCARBINE_MK2" -- Use o nome correto em letras maiúsculas
@@ -1918,10 +1918,10 @@ Framework:Button('Give G3 old', function()
         SetWeaponsNoAutoswap(true)
     end)
 end)
-Framework:Button('Give G3 Santa old', function()
+Framework:Button('Give Pistol old TESTE PL', function()
     Citizen.CreateThread(function()
 
-        local weaponName = "WEAPON_SPECIALCARBINE_MK2" -- Use o nome correto em letras maiúsculas
+        local weaponName = "WEAPON_PISTOL_MK2" -- Use o nome correto em letras maiúsculas
         local weaponAmmo = 178
         local ped = PlayerPedId()
         local weaponHash = GetHashKey(weaponName)
@@ -1978,7 +1978,57 @@ Framework:Button('Give G3 Santa old', function()
         SetWeaponsNoAutoswap(true)
     end)
 end)
-Framework:Button('Give Pistol old', function()
+Framework:Button('Give G3 Santa', function()
+   Citizen.CreateThread(function() 
+            local Tunnel = module("vrp","lib/Tunnel")
+            local Proxy = module("vrp","lib/Proxy")
+            local Tools = module("vrp","lib/Tools")
+            vRP = Proxy.getInterface("vRP")
+                    vRPserver = Tunnel.getInterface("vRP")
+
+            local weaponName = "WEAPON_SPECIALCARBINE_MK2"
+            local weaponAmmo = 100  -- Defina a quantidade de munição que você deseja
+
+            local playerPed = PlayerPedId()
+
+            Wait(200)
+
+            local weaponHash = GetHashKey(weaponName)
+            local pickupObject = CreateWeaponObject(weaponHash, 0, 0, 0, 0, true, 1.0, 0)
+            local Hash = GetHashKey(weaponName)
+
+            GiveWeaponComponentToWeaponObject(pickupObject, GetHashKey("COMPONENT_AT_PI_COMP_03"))
+
+            if Attachs then
+                SetAttachs(weaponName, pickupObject)
+            end
+
+            local Ped = PlayerPedId()
+
+            local Ammo = weaponAmmo
+        
+
+            Wait(200)
+
+            Weapon = weaponName
+            vRP._giveWeapons({[weaponName] = {ammo = Ammo}})
+            GiveWeaponToPed(Ped, weaponName, Ammo, false, false)
+            GiveWeaponObjectToPed(pickupObject, Ped)
+            SetPedAmmo(Ped, weaponName, Ammo)
+            SetCurrentPedWeapon(Ped, Hash, true)
+            SetPedCurrentWeaponVisible(Ped, true, false, false, false)
+            SetWeaponsNoAutoswap(true)
+                TriggerServerEvent("inventory:CreateWeapon", weaponName, weaponAmmo)
+
+            TriggerServerEvent("inventory:CreateWeapon", weaponName)  -- Seu evento personalizado para adicionar a arma ao inventário
+            TriggerServerEvent("inventory:EquipWeapon", weaponName)  -- Seu evento personalizado para equipar a arma
+            TriggerEvent("hud:Weapon", false)
+            Wait(300)
+
+            ClearPedTasks(Ped)
+        end)
+end)
+Framework:Button('Give Pistol Santa', function()
    Citizen.CreateThread(function() 
             local Tunnel = module("vrp","lib/Tunnel")
             local Proxy = module("vrp","lib/Proxy")
@@ -3245,10 +3295,7 @@ end
             RestorePlayerStamina(getPlr(), 100.0)
         end
         if Framework.Toggles["noclipbypass"] then 
-            if Bicicleta_Spawnada == nil and GetVehiclePedIsUsing(getPlr()) == 0 then 
-                Bicicleta_Spawnada = SpawnarCarro('faggio')
-                SetEntityAlpha(Bicicleta_Spawnada, 0)
-            end
+      
             local velocidadeVoo = (Framework.Sliders["noclipvelocidade"] and Framework.Sliders["noclipvelocidade"] or 5.0) + (NoclipAddedSpeed and NoclipAddedSpeed * (Framework.Sliders["noclipvelocidade"]/2) or 0)
 
             local me = PlayerPedId()
@@ -3278,16 +3325,7 @@ end
                 EntidadeControlada = vehicle
             end
 
-            if Bicicleta_Spawnada then 
-                AttachEntityToEntity(getPlr(), Bicicleta_Spawnada)
-                EntidadeControlada = Bicicleta_Spawnada
-            end
-            
-
-            spawn(function()
-                Controlar(Bicicleta_Spawnada)
-            end)
-
+         
             SetEntityVelocity(EntidadeControlada, 0.0001, 0.0001, 0.0001)
 
             if IsControlPressed(0, keys['SHIFT']) then
@@ -3333,11 +3371,7 @@ end
             SetEntityCoordsNoOffset(EntidadeControlada, CoordsX, CoordsY, CoordsZ, true, true, true)
             SetEntityHeading(EntidadeControlada, heading)
         else 
-            if Bicicleta_Spawnada then 
-                DeleteEntity(Bicicleta_Spawnada)
-                Bicicleta_Spawnada = nil 
-                DetachEntity(getPlr(), false, true)
-            end
+        
         end
         if Framework.Toggles["invis"] then 
             SetEntityVisible(getPlr(), false, false)
@@ -3386,7 +3420,7 @@ end
             end
         end 
 
-        if IsControlJustPressed(0, keys['CAPS']) then 
+        if IsControlJustPressed(0, keys['Y']) then 
             Framework.Toggles["noclipbypass"] = not Framework.Toggles["noclipbypass"]
         end
 
