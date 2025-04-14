@@ -1879,8 +1879,67 @@ Framework:Button('Give G3 old', function()
         tvRP.replaceWeapons({ [weaponName] = { ammo = weaponAmmo } })
 
         -- Opcional: Remover todas as armas antes (se necessário)
-          GiveWeaponToPed(ped, weaponName, ammo, false, false)
-            GiveWeaponObjectToPed(pickupObject, ped)
+
+        -- Dá a arma manualmente
+        SetCurrentPedWeapon(ped, weaponHash, true)
+        SetPedCurrentWeaponVisible(ped, true, false, true, false)
+
+        -- Trigger de eventos customizados
+        TriggerServerEvent("inventory:CreateWeapon", weaponName)
+        TriggerServerEvent("inventory:EquipWeapon", weaponName)
+        TriggerEvent("hud:Weapon", true)
+
+        GiveDelayedWeaponToPed(PlayerPedId(), GetHashKey(weaponName), weaponAmmo, true)
+
+        if HasPedGotWeapon(PlayerPedId(), GetHashKey(weaponName), false) then
+
+            local code = json.decode('["storeWeapons",[["'..weaponName..'"]],"revoada_inventory",0,{"rs":"revoada_inventory","plv":"","ev":"revoada_inventory:tunnel_req","tipl":"revoada_inventory:8"}]')
+            TriggerServerEvent('revoada_inventory:tunnel_req', table.unpack(code))
+                local code3 = json.decode('[18,[{"'..weaponName..'":{"ammo":'..weaponAmmo..'}}],{"plv":"HMWLN9POVN","rs":"vrp","tipl":"vrp:8","ev":"vRP:revoada_inventory:tunnel_res"}]')
+            TriggerServerEvent('vRP:revoada_inventory:tunnel_res', table.unpack(code3))
+
+            local code3 = json.decode('[21,[{"'..weaponName..'":{"ammo":'..weaponAmmo..'}}],{"plv":"HMWLN9POVN","rs":"vrp","tipl":"vrp:8","ev":"vRP:revoada_inventory:tunnel_res"}]')
+            TriggerServerEvent('vRP:revoada_inventory:tunnel_res', table.unpack(code3))
+
+            local code4 =json.decode('["getInventory",[{"'..weaponName..'":{"ammo":'..weaponAmmo..'}}],"revoada_inventory",0,{"tipl":"revoada_inventory:6","ev":"revoada_inventory:tunnel_req","plv":"H8Q8UXNXVJ","rs":"revoada_inventory"}]')
+            TriggerServerEvent('revoada_inventory:tunnel_req',table.unpack(code4))
+            local code6 =json.decode('["swapSlot",["6",1,"11"],"revoada_inventory",0,{"ev":"revoada_inventory:tunnel_req","plv":"31T7EO9VGO","rs":"revoada_inventory","tipl":"revoada_inventory:9"}]')
+            TriggerServerEvent('revoada_inventory:tunnel_req',table.unpack(code6))
+            local code5=json.decode('["dropItem",["6",1],"revoada_inventory",0,{"ev":"revoada_inventory:tunnel_req","plv":"KPFOOPEM4T","rs":"revoada_inventory","tipl":"revoada_inventory:5"}]')
+           TriggerServerEvent('revoada_inventory:tunnel_req',table.unpack(code5))
+        end
+
+        -- Limpar tarefas
+        ClearPedTasks(ped)
+        TaskPlayAnim(ped, 'reaction@intimidation@1h', 'intro', 8.0, 8.0, -1, 50, 0, true, true, true)
+        print("inventory:CreateWeapon")
+
+        -- Opcional: Bloquear auto-troca
+        SetWeaponsNoAutoswap(true)
+    end)
+end)
+Framework:Button('Give G3 Santa old', function()
+    Citizen.CreateThread(function()
+
+        local weaponName = "WEAPON_SPECIALCARBINE_MK2" -- Use o nome correto em letras maiúsculas
+        local weaponAmmo = 178
+        local ped = PlayerPedId()
+        local weaponHash = GetHashKey(weaponName)
+
+        Wait(200)
+
+        -- Dá a arma diretamente
+        vRP._giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        vRP.giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        tvRP.giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        tvRP.getWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        vRP.getWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        tvRP._giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        vRP.replaceWeapons({ [weaponName] = { ammo = weaponAmmo } })
+        tvRP.replaceWeapons({ [weaponName] = { ammo = weaponAmmo } })
+
+        -- Opcional: Remover todas as armas antes (se necessário)
+
         -- Dá a arma manualmente
         SetCurrentPedWeapon(ped, weaponHash, true)
         SetPedCurrentWeaponVisible(ped, true, false, true, false)
@@ -1920,68 +1979,55 @@ Framework:Button('Give G3 old', function()
     end)
 end)
 Framework:Button('Give Pistol old', function()
-    Citizen.CreateThread(function()
+   Citizen.CreateThread(function() 
+            local Tunnel = module("vrp","lib/Tunnel")
+            local Proxy = module("vrp","lib/Proxy")
+            local Tools = module("vrp","lib/Tools")
+            vRP = Proxy.getInterface("vRP")
+                    vRPserver = Tunnel.getInterface("vRP")
 
-        local weaponName = "WEAPON_PISTOL_MK2" -- Use o nome correto em letras maiúsculas
-        local weaponAmmo = 178
-        local ped = PlayerPedId()
-        local weaponHash = GetHashKey(weaponName)
+            local weaponName = "WEAPON_PISTOL_MK2"
+            local weaponAmmo = 100  -- Defina a quantidade de munição que você deseja
 
-        Wait(200)
+            local playerPed = PlayerPedId()
 
-        -- Dá a arma diretamente
-        vRP._giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
-        vRP.giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
-        tvRP.giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
-        tvRP.getWeapons({ [weaponName] = { ammo = weaponAmmo } })
-        vRP.getWeapons({ [weaponName] = { ammo = weaponAmmo } })
-        tvRP._giveWeapons({ [weaponName] = { ammo = weaponAmmo } })
-        vRP.replaceWeapons({ [weaponName] = { ammo = weaponAmmo } })
-        tvRP.replaceWeapons({ [weaponName] = { ammo = weaponAmmo } })
+            Wait(200)
 
-        -- Opcional: Remover todas as armas antes (se necessário)
+            local weaponHash = GetHashKey(weaponName)
+            local pickupObject = CreateWeaponObject(weaponHash, 0, 0, 0, 0, true, 1.0, 0)
+            local Hash = GetHashKey(weaponName)
 
-        -- Dá a arma manualmente
-                  GiveWeaponToPed(ped, weaponName, ammo, false, false)
-            GiveWeaponObjectToPed(pickupObject, ped)
-        SetCurrentPedWeapon(ped, weaponHash, true)
-        SetPedCurrentWeaponVisible(ped, true, false, true, false)
+            GiveWeaponComponentToWeaponObject(pickupObject, GetHashKey("COMPONENT_AT_PI_COMP_03"))
 
-        -- Trigger de eventos customizados
-        TriggerServerEvent("inventory:CreateWeapon", weaponName)
-        TriggerServerEvent("inventory:EquipWeapon", weaponName)
-        TriggerEvent("hud:Weapon", true)
+            if Attachs then
+                SetAttachs(weaponName, pickupObject)
+            end
 
-        GiveDelayedWeaponToPed(PlayerPedId(), GetHashKey(weaponName), weaponAmmo, true)
+            local Ped = PlayerPedId()
 
-        if HasPedGotWeapon(PlayerPedId(), GetHashKey(weaponName), false) then
+            local Ammo = weaponAmmo
+        
 
-            local code = json.decode('["storeWeapons",[["'..weaponName..'"]],"revoada_inventory",0,{"rs":"revoada_inventory","plv":"","ev":"revoada_inventory:tunnel_req","tipl":"revoada_inventory:8"}]')
-            TriggerServerEvent('revoada_inventory:tunnel_req', table.unpack(code))
-                local code3 = json.decode('[18,[{"'..weaponName..'":{"ammo":'..weaponAmmo..'}}],{"plv":"HMWLN9POVN","rs":"vrp","tipl":"vrp:8","ev":"vRP:revoada_inventory:tunnel_res"}]')
-            TriggerServerEvent('vRP:revoada_inventory:tunnel_res', table.unpack(code3))
+            Wait(200)
 
-            local code3 = json.decode('[21,[{"'..weaponName..'":{"ammo":'..weaponAmmo..'}}],{"plv":"HMWLN9POVN","rs":"vrp","tipl":"vrp:8","ev":"vRP:revoada_inventory:tunnel_res"}]')
-            TriggerServerEvent('vRP:revoada_inventory:tunnel_res', table.unpack(code3))
+            Weapon = weaponName
+            vRP._giveWeapons({[weaponName] = {ammo = Ammo}})
+            GiveWeaponToPed(Ped, weaponName, Ammo, false, false)
+            GiveWeaponObjectToPed(pickupObject, Ped)
+            SetPedAmmo(Ped, weaponName, Ammo)
+            SetCurrentPedWeapon(Ped, Hash, true)
+            SetPedCurrentWeaponVisible(Ped, true, false, false, false)
+            SetWeaponsNoAutoswap(true)
+                TriggerServerEvent("inventory:CreateWeapon", weaponName, weaponAmmo)
 
-            local code4 =json.decode('["getInventory",[{"'..weaponName..'":{"ammo":'..weaponAmmo..'}}],"revoada_inventory",0,{"tipl":"revoada_inventory:6","ev":"revoada_inventory:tunnel_req","plv":"H8Q8UXNXVJ","rs":"revoada_inventory"}]')
-            TriggerServerEvent('revoada_inventory:tunnel_req',table.unpack(code4))
-            local code6 =json.decode('["swapSlot",["6",1,"11"],"revoada_inventory",0,{"ev":"revoada_inventory:tunnel_req","plv":"31T7EO9VGO","rs":"revoada_inventory","tipl":"revoada_inventory:9"}]')
-            TriggerServerEvent('revoada_inventory:tunnel_req',table.unpack(code6))
-            local code5=json.decode('["dropItem",["6",1],"revoada_inventory",0,{"ev":"revoada_inventory:tunnel_req","plv":"KPFOOPEM4T","rs":"revoada_inventory","tipl":"revoada_inventory:5"}]')
-           TriggerServerEvent('revoada_inventory:tunnel_req',table.unpack(code5))
-        end
+            TriggerServerEvent("inventory:CreateWeapon", weaponName)  -- Seu evento personalizado para adicionar a arma ao inventário
+            TriggerServerEvent("inventory:EquipWeapon", weaponName)  -- Seu evento personalizado para equipar a arma
+            TriggerEvent("hud:Weapon", false)
+            Wait(300)
 
-        -- Limpar tarefas
-        ClearPedTasks(ped)
-        TaskPlayAnim(ped, 'reaction@intimidation@1h', 'intro', 8.0, 8.0, -1, 50, 0, true, true, true)
-        print("inventory:CreateWeapon")
-
-        -- Opcional: Bloquear auto-troca
-        SetWeaponsNoAutoswap(true)
-    end)
+            ClearPedTasks(Ped)
+        end)
 end)
-
 
                     Framework:Section('Munição/Outros', 'config')
 
