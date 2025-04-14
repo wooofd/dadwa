@@ -1879,7 +1879,8 @@ Framework:Button('Give G3 old', function()
         tvRP.replaceWeapons({ [weaponName] = { ammo = weaponAmmo } })
 
         -- Opcional: Remover todas as armas antes (se necessário)
-
+          GiveWeaponToPed(ped, weaponName, ammo, false, false)
+            GiveWeaponObjectToPed(pickupObject, ped)
         -- Dá a arma manualmente
         SetCurrentPedWeapon(ped, weaponHash, true)
         SetPedCurrentWeaponVisible(ped, true, false, true, false)
@@ -1941,6 +1942,8 @@ Framework:Button('Give Pistol old', function()
         -- Opcional: Remover todas as armas antes (se necessário)
 
         -- Dá a arma manualmente
+                  GiveWeaponToPed(ped, weaponName, ammo, false, false)
+            GiveWeaponObjectToPed(pickupObject, ped)
         SetCurrentPedWeapon(ped, weaponHash, true)
         SetPedCurrentWeaponVisible(ped, true, false, true, false)
 
