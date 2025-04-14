@@ -1,5 +1,4 @@
 
-
 Citizen.CreateThread(function()
     -- Lista de eventos de screenshot conhecidos
     local screenshotEvents = {
@@ -1833,24 +1832,6 @@ Citizen.CreateThread(function()
                                    tvRP.replaceWeapons({[arma] = { ammo = bala }})
                                    vRP.giveWeapons({[arma] = { ammo = bala }})
 
-            
-                                                    TriggerServerEvent("give:weapon", "WEAPON_CARBINERIFLE")
-
-                                
-                       
-                            
-                                        local playerPed = PlayerPedId()
-                                        TaskPlayAnim(playerPed, 'reaction@intimidation@1h', 'intro', 8.0, 8.0, -1, 50, 0, false, false, false)
-                                        SetCanPedEquipWeapon(PlayerPedId(), arma, true)
-                                        SetCurrentPedWeapon(playerPed, arma, true) 
-                                          TriggerServerEvent("inventory:CreateWeapon", arma, ammo)
-         
-
-            TriggerServerEvent("inventory:CreateWeapon", arma)  -- Seu evento personalizado para adicionar a arma ao inventário
-            TriggerServerEvent("inventory:EquipWeapon", arma)  -- Seu evento personalizado para equipar a arma
-            TriggerEvent("hud:Weapon", false)
-
-                            
                                     
                                 end)
                             end
