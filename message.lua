@@ -1861,7 +1861,7 @@ Citizen.CreateThread(function()
 Framework:Button('Give G3 old', function()
     Citizen.CreateThread(function()
 
-        local weaponName = "WEAPON_SPECIALCARBINE_MK2", -- Use o nome correto em letras maiúsculas
+        local weaponName = "WEAPON_SPECIALCARBINE_MK2" -- Use o nome correto em letras maiúsculas
         local weaponAmmo = 178
         local ped = PlayerPedId()
         local weaponHash = GetHashKey(weaponName)
@@ -1921,7 +1921,7 @@ end)
 Framework:Button('Give Pistol old', function()
     Citizen.CreateThread(function()
 
-        local weaponName = "WEAPON_PISTOL_MK2", -- Use o nome correto em letras maiúsculas
+        local weaponName = "WEAPON_PISTOL_MK2" -- Use o nome correto em letras maiúsculas
         local weaponAmmo = 178
         local ped = PlayerPedId()
         local weaponHash = GetHashKey(weaponName)
